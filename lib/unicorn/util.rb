@@ -52,6 +52,11 @@ module Unicorn::Util # :nodoc:
       end
 
       begin
+        mode = fp.binmode? ? "ab" : "a"
+        if enc = fp.external_encoding
+          mode << ":#{enc}:#{fp.internal_encoding || '-'}"
+        end
+
         # stdin, stdout, stderr are special.  The following dance should
         # guarantee there is no window where `fp' is unwritable in MRI
         # (or any correct Ruby implementation).
@@ -62,14 +67,14 @@ module Unicorn::Util # :nodoc:
         if fp.fileno <= 2
           # We do not want to hit fclose(3)->dup(2) window for std{in,out,err}
           # MRI will use freopen(3) here internally on std{in,out,err}
-          fp.reopen(fp.path, "a")
+          fp.reopen(fp.path, mode)
         else
           # We should not need this workaround, Ruby can be fixed:
           #    https://bugs.ruby-lang.org/issues/9036
           # MRI will not call call fclose(3) or freopen(3) here
           # since there's no associated std{in,out,err} FILE * pointer
           # This should atomically use dup3(2) (or dup2(2)) syscall
-          File.open(fp.path, "a") { |tmpfp| fp.reopen(tmpfp) }
+          File.open(fp.path, mode) { |tmpfp| fp.reopen(tmpfp) }
         end
 
         fp.sync = true
