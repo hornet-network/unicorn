@@ -31,12 +31,10 @@ RUBY_ENGINE := $(shell $(RUBY) -e 'puts((RUBY_ENGINE rescue "ruby"))')
 # https://udrepper.livejournal.com/8790.html
 ext := $(firstword $(wildcard ext/*))
 
-ragel: $(ext)/unicorn_http.c
+.PHONY: ragel
+ragel:
+	cd $(ext) && $(RAGEL) unicorn_http.rl -C $(RLFLAGS) -o unicorn_http.c
 
-rl_files := $(wildcard $(ext)/*.rl)
-ragel: $(ext)/unicorn_http.c
-$(ext)/unicorn_http.c: $(rl_files)
-	cd $(@D) && $(RAGEL) unicorn_http.rl -C $(RLFLAGS) -o $(@F)
 ext_pfx := test/$(RUBY_ENGINE)-$(RUBY_VERSION)
 tmp_bin := $(ext_pfx)/bin
 ext_h := $(wildcard $(ext)/*/*.h $(ext)/*.h)
@@ -193,7 +191,7 @@ install: $(bins) $(ext)/unicorn_http.c
 	mkdir .install-tmp
 	cp -p bin/* .install-tmp
 	$(RUBY) setup.rb all
-	$(RM) $^
+	$(RM) $(bins)
 	mv .install-tmp/* bin/
 	$(RM) -r .install-tmp
 	$(prep_setup_rb)
