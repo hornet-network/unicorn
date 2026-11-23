@@ -39,6 +39,10 @@ Gem::Specification.new do |s|
 
   s.add_dependency(%q<raindrops>, '~> 0.7')
 
+  # logger is a bundled gem (no longer a default gem) as of Ruby 4.0,
+  # so Bundler only makes it loadable when something depends on it.
+  s.add_dependency(%q<logger>)
+
   s.add_development_dependency('test-unit', '~> 3.0')
 
   # Note: To avoid ambiguity, we intentionally avoid the SPDX-compatible
