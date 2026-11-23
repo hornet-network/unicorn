@@ -40,6 +40,7 @@ class TestUtil < Test::Unit::TestCase
     assert File.exist?(tmp_path)
     assert before != File.stat(tmp_path).inspect
     assert_equal fp.stat.inspect, File.stat(tmp_path).inspect
+    assert_predicate fp, :binmode?
     assert_equal ext, (fp.external_encoding rescue nil)
     assert_equal int, (fp.internal_encoding rescue nil)
     assert_equal(EXPECT_FLAGS, EXPECT_FLAGS & fp.fcntl(Fcntl::F_GETFL))

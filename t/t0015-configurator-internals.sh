@@ -8,12 +8,13 @@ t_begin "setup and start" && {
 HttpRequest::DEFAULTS["rack.url_scheme"] = "https"
 Configurator::DEFAULTS[:logger].formatter = Logger::Formatter.new
 EOF
-	unicorn -D -c $unicorn_config env.ru
+	unicorn -D -c $unicorn_config integration.ru
 	unicorn_wait_start
 }
 
 t_begin "single request" && {
-	curl -sSfv http://$listen/ | grep '"rack.url_scheme"=>"https"'
+	curl -fsS "http://$listen/env_dump" |
+		$RUBY -rjson -e 'exit(JSON.parse(STDIN.read).fetch("rack.url_scheme") == "https")'
 }
 
 t_begin "killing succeeds" && {

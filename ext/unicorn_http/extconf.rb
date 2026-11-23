@@ -2,34 +2,13 @@
 # frozen_string_literal: false
 require 'mkmf'
 
-def generate_ragel_source
-  src = File.expand_path('unicorn_http.c', __dir__)
-  return if File.exist?(src)
-
-  ragel_cfg = with_config('ragel') { find_executable('ragel') }
-  ragel = if ragel_cfg.respond_to?(:strip)
-    ragel_cfg = ragel_cfg.strip
-    ragel_cfg unless ragel_cfg.empty? ||
-                   (ragel_cfg.is_a?(String) && ragel_cfg !~ %r{\A/})
-  end
-  ragel ||= find_executable('ragel')
-  unless ragel
-    abort <<~MSG
-      ragel(1) is required to generate ext/unicorn_http/unicorn_http.c.
-
-      Install ragel (e.g. via your package manager) or run `gmake ragel`
-      from the repository root before installing unicorn from git.
-    MSG
-  end
-
-  Dir.chdir(__dir__) do
-    cmd = [ragel, 'unicorn_http.rl', '-C', '-G2', '-o', 'unicorn_http.c']
-    message("running #{cmd.join(' ')}\n")
-    system(*cmd) || abort("ragel failed to generate unicorn_http.c")
-  end
+# This fork commits the Ragel-generated parser. Without it the extension
+# builds but has no Init_unicorn_http. It is not generated here because
+# Ragel on arm64 Linux emits a different state machine than on x86-64.
+unless File.exist?(File.expand_path('unicorn_http.c', __dir__))
+  abort 'ext/unicorn_http/unicorn_http.c is missing: regenerate it with ' \
+        '`gmake ragel` on x86-64 and commit it'
 end
-
-generate_ragel_source
 
 have_func("rb_hash_clear", "ruby.h") or abort 'Ruby 2.0+ required'
 
